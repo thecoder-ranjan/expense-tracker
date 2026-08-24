@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Antigravity Expense Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+    {% if session.get('user_id') %}
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <h1>💸 Antigravity</h1>
+        <p class="user-info">Logged in as: <b>{{ session.get('username') | capitalize }}</b></p>
+        
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">📊 Dashboard</a>
+            <a href="{{ url_for('expenses') }}" class="{% if request.endpoint == 'expenses' %}active{% endif %}">💸 Expenses</a>
+            <a href="{{ url_for('budgets') }}" class="{% if request.endpoint == 'budgets' %}active{% endif %}">🎯 Budgets & Savings</a>
+            <a href="{{ url_for('reports') }}" class="{% if request.endpoint == 'reports' %}active{% endif %}">📑 Reports</a>
+            <a href="{{ url_for('ai_advisor') }}" class="{% if request.endpoint == 'ai_advisor' %}active{% endif %}">🤖 AI Advisor</a>
+        </div>
+        
+        <form action="{{ url_for('set_gemini_key') }}" method="POST" style="margin-top:20px;">
+            <div class="form-group">
+                <label>Gemini API Key</label>
+                <input type="password" name="api_key" class="form-control" value="{{ session.get('gemini_key', '') }}" placeholder="Enter API Key">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="font-size:0.8rem; padding:0.5rem;">Save Key</button>
+        </form>
+
+        <a href="{{ url_for('logout') }}" class="logout-btn" style="margin-top:20px;">🔓 Log Out</a>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="{% if session.get('user_id') %}main-content{% else %}auth-container{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

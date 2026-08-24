@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}AI Advisor - Antigravity{% endblock %}
+
+{% block content %}
+<h2 class="page-title">🤖 AI Financial Advisor</h2>
+
+<div class="page-tabs">
+    <div class="page-tab active" data-target="analysis-tab">📊 Personal Finance Analysis</div>
+    <div class="page-tab" data-target="chat-tab">💬 Chat Financial Assistant</div>
+</div>
+
+<div id="analysis-tab" class="tab-content active">
+    <div class="card">
+        <p style="margin-bottom: 1.5rem; color:var(--text-secondary);">Generate a comprehensive spending analysis and receive actionable financial advice.</p>
+        <form action="{{ url_for('ai_analyze') }}" method="POST">
+            <button type="submit" class="btn btn-primary" style="font-size:1.1rem; padding:1rem 2rem;">🚀 Analyze Spending & Generate Tips</button>
+        </form>
+    </div>
+    
+    {% if analysis_result %}
+    <div class="card" style="margin-top: 1.5rem; line-height: 1.6;">
+        {{ analysis_html | safe }}
+    </div>
+    {% endif %}
+</div>
+
+<div id="chat-tab" class="tab-content">
+    <div class="card">
+        <p style="margin-bottom: 1.5rem; color:var(--text-secondary);">Ask our AI assistant any questions regarding budgeting, saving strategies, or insights on your spending.</p>
+        
+        <div id="chat-container" class="chat-container" style="background: rgba(15, 23, 42, 0.4); border-radius: 8px; min-height: 300px; margin-bottom: 1rem;">
+            {% for msg in chat_history %}
+                <div class="chat-message {% if msg.role == 'user' %}chat-user{% else %}chat-ai{% endif %}">
+                    {{ msg.content | safe }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <form id="chat-form" style="display:flex; gap:10px;">
+            <input type="text" id="chat-input" class="form-control" placeholder="How can I lower my food spending?" required>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+        
+        <form action="{{ url_for('clear_chat') }}" method="POST" style="margin-top: 1rem; text-align:right;">
+            <button type="submit" class="btn" style="background:transparent; color:var(--text-secondary); border: 1px solid var(--text-secondary);">🧹 Clear Chat History</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

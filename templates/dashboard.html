@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Antigravity{% endblock %}
+
+{% block content %}
+<h2 class="page-title">📊 Financial Overview for {{ username | capitalize }}</h2>
+
+{% if alerts %}
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom:1rem;">🔔 Budget Notifications</h3>
+        {% for alert in alerts %}
+            <div class="alert alert-{{ alert.type }}">
+                {% if alert.type == 'danger' %}🚨 Over Budget{% else %}⚠️ Budget Warning{% endif %}:
+                You have used <b>{{ alert.pct | round(1) }}%</b> of your <b>{{ alert.cat }}</b> budget.
+                (Spent: ${{ "%.2f"|format(alert.spent) }} | Limit: ${{ "%.2f"|format(alert.limit) }})
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="grid-4" style="margin-bottom:2rem;">
+    <div class="card">
+        <div class="metric-label">Spent This Month</div>
+        <div class="metric-value" style="color: var(--color-danger);">${{ "%.2f"|format(total_spent) }}</div>
+    </div>
+    <div class="card">
+        <div class="metric-label">Total Monthly Budget</div>
+        <div class="metric-value" style="color: {% if total_budget > 0 %}var(--color-primary){% else %}var(--text-secondary){% endif %};">${{ "%.2f"|format(total_budget) }}</div>
+    </div>
+    <div class="card">
+        <div class="metric-label">Total Savings Progress</div>
+        <div class="metric-value" style="color: {% if total_savings > 0 %}var(--color-success){% else %}var(--text-secondary){% endif %};">${{ "%.2f"|format(total_savings) }} / ${{ "%.2f"|format(total_savings_target) }}</div>
+    </div>
+    <div class="card">
+        <div class="metric-label">Month Transactions</div>
+        <div class="metric-value" style="color: var(--color-warning);">{{ tx_count }}</div>
+    </div>
+</div>
+
+{% if tx_count == 0 %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color:var(--color-primary); margin-bottom:1rem;">💡 Welcome to your Expense Tracker!</h3>
+        <p style="color:var(--text-secondary);">Head over to the Expenses Manager to add your first transaction.</p>
+    </div>
+{% else %}
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;">🍩 Spending by Category (This Month)</h3>
+            <div id="pie-chart" style="width: 100%; height: 350px;"></div>
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;">📈 Daily Spending Trend</h3>
+            <div id="line-chart" style="width: 100%; height: 350px;"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-bottom: 1.5rem;">📊 Budget Progress tracker (Current Month)</h3>
+        {% if month_budgets %}
+            {% for cat, limit in month_budgets.items() %}
+                {% set spent = cat_spending.get(cat, 0.0) %}
+                {% set pct = (spent / limit) * 100 if limit > 0 else 0 %}
+                {% set pct_disp = pct if pct <= 100 else 100 %}
+                <div style="margin-bottom: 1rem;">
+                    <div class="flex-between" style="margin-bottom: 0.25rem;">
+                        <span style="font-weight: 500;">{{ cat }}</span>
+                        <span style="font-size:0.85rem; color:var(--text-secondary);">
+                            ${{ "%.2f"|format(spent) }} / ${{ "%.2f"|format(limit) }} ({{ pct | round(1) }}%)
+                        </span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: {{ pct_disp }}%; background: {% if pct >= 100 %}var(--color-danger){% elif pct >= 80 %}var(--color-warning){% else %}var(--color-success){% endif %};"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-secondary);">No budget limits set. Head to Budgets & Savings to configure them.</p>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if tx_count > 0 %}
+<script>
+    var pieData = {{ pie_json | safe }};
+    Plotly.newPlot('pie-chart', pieData.data, pieData.layout, {responsive: true});
+
+    var lineData = {{ line_json | safe }};
+    Plotly.newPlot('line-chart', lineData.data, lineData.layout, {responsive: true});
+</script>
+{% endif %}
+{% endblock %}

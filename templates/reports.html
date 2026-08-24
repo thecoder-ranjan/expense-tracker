@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Reports - Antigravity{% endblock %}
+
+{% block content %}
+<h2 class="page-title">📑 Monthly Reports & Exports</h2>
+<p style="color:var(--text-secondary); margin-bottom: 2rem;">Review, structure, and export your monthly spending data in CSV or print-ready PDF formats.</p>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <form action="{{ url_for('reports') }}" method="GET" style="display:flex; gap:10px; align-items:flex-end;">
+        <div class="form-group" style="margin: 0;">
+            <label>Select Report Month</label>
+            <input type="month" name="report_month" class="form-control" value="{{ selected_month }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">View Report</button>
+    </form>
+</div>
+
+{% if has_data %}
+    <h3 style="margin-bottom: 1.5rem;">Report Summary for {{ month_label }}</h3>
+    
+    <div class="grid-4" style="margin-bottom:2rem;">
+        <div class="card">
+            <div class="metric-label">Total Spent</div>
+            <div class="metric-value">${{ "%.2f"|format(total_spent) }}</div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Transactions</div>
+            <div class="metric-value">{{ num_transactions }}</div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Average Spent</div>
+            <div class="metric-value">${{ "%.2f"|format(avg_spend) }}</div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Largest Expense</div>
+            <div class="metric-value">${{ "%.2f"|format(largest_expense) }}</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <form action="{{ url_for('export_csv') }}" method="POST">
+                <input type="hidden" name="month_str" value="{{ selected_month }}">
+                <button type="submit" class="btn btn-block" style="background:var(--color-primary); color:#0F172A; margin-bottom:1rem;">📥 Export Report as CSV</button>
+            </form>
+            <p style="font-size:0.85rem; color:var(--text-secondary); text-align:center;">Download your data to analyze in Excel or Google Sheets.</p>
+        </div>
+        <div class="card">
+            <form action="{{ url_for('export_pdf') }}" method="POST">
+                <input type="hidden" name="month_str" value="{{ selected_month }}">
+                <button type="submit" class="btn btn-block" style="background:#EF4444; color:#fff; margin-bottom:1rem;">📥 Export Report as PDF</button>
+            </form>
+            <p style="font-size:0.85rem; color:var(--text-secondary); text-align:center;">Generate a formatted, print-ready document.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-warning">
+        No expense transactions recorded in this month. Export features disabled until data is present.
+    </div>
+{% endif %}
+{% endblock %}

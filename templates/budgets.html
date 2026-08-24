@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Budgets & Savings - Antigravity{% endblock %}
+
+{% block content %}
+<h2 class="page-title">🎯 Budgets & Savings Goals</h2>
+
+<div class="page-tabs">
+    <div class="page-tab active" data-target="budgets-tab">📊 Category Budgets</div>
+    <div class="page-tab" data-target="savings-tab">💰 Savings Tracker</div>
+</div>
+
+<div id="budgets-tab" class="tab-content active">
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem;">⚙️ Set/Update Category Budget</h3>
+            <form action="{{ url_for('set_budget') }}" method="POST">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" class="form-control" required>
+                        {% for c in categories %}
+                            <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monthly Limit ($)</label>
+                    <input type="number" step="1.0" min="1" name="limit_amount" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Target Month</label>
+                    <input type="month" name="month_year" class="form-control" value="{{ current_month_str }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Budget</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem;">📋 Configured Budgets ({{ current_month_str }})</h3>
+            {% if active_budgets %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Limit ($)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in active_budgets %}
+                        <tr>
+                            <td>{{ b.category }}</td>
+                            <td>${{ "%.2f"|format(b.limit_amount) }}</td>
+                            <td>
+                                <form action="{{ url_for('delete_budget') }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="category" value="{{ b.category }}">
+                                    <input type="hidden" name="month_year" value="{{ b.month_year }}">
+                                    <button type="submit" class="btn" style="padding:0.25rem 0.5rem; background:rgba(239, 68, 68, 0.2); color:var(--color-danger);">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: var(--text-secondary);">No budgets configured for this month.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="savings-tab" class="tab-content">
+    <div class="grid-2">
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem;">🎯 Create Savings Goal</h3>
+            <form action="{{ url_for('create_savings_goal') }}" method="POST">
+                <div class="form-group">
+                    <label>Goal Name</label>
+                    <input type="text" name="goal_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Target Amount ($)</label>
+                    <input type="number" step="10.0" min="1" name="target_amount" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Currently Saved ($)</label>
+                    <input type="number" step="10.0" min="0" name="current_amount" class="form-control" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Target Achieve Date</label>
+                    <input type="date" name="target_date" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Create Goal</button>
+            </form>
+
+            {% if savings_goals %}
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--glass-border);">
+            <h3 style="margin-bottom: 1.5rem;">🔄 Update Goal Balance</h3>
+            <form action="{{ url_for('update_savings_goal') }}" method="POST">
+                <div class="form-group">
+                    <label>Select Goal</label>
+                    <select name="goal_id" class="form-control" required>
+                        {% for g in savings_goals %}
+                            <option value="{{ g.id }}">{{ g.goal_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>New Cumulative Saved Amount ($)</label>
+                    <input type="number" step="10.0" min="0" name="new_amount" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Update Balance</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1.5rem;">📈 Savings Goals Status</h3>
+            {% if savings_goals %}
+                {% for g in savings_goals %}
+                    {% set pct = (g.current_amount / g.target_amount) * 100 if g.target_amount > 0 else 0 %}
+                    {% set pct_disp = pct if pct <= 100 else 100 %}
+                    <div style="margin-bottom: 2rem;">
+                        <div class="flex-between">
+                            <h4>{{ g.goal_name }}</h4>
+                            <form action="{{ url_for('delete_savings_goal', goal_id=g.id) }}" method="POST">
+                                <button type="submit" class="btn" style="padding:0.25rem 0.5rem; background:transparent; color:var(--text-secondary); border: 1px solid var(--text-secondary); font-size:0.75rem;">Delete</button>
+                            </form>
+                        </div>
+                        <div class="progress-container" style="height: 12px; margin: 0.75rem 0;">
+                            <div class="progress-bar" style="width: {{ pct_disp }}%; background: {% if pct >= 100 %}var(--color-success){% else %}var(--color-primary){% endif %};"></div>
+                        </div>
+                        <div class="flex-between" style="font-size:0.85rem; color:var(--text-secondary);">
+                            <span>Saved: ${{ "%.2f"|format(g.current_amount) }} / ${{ "%.2f"|format(g.target_amount) }}</span>
+                            <span>{{ pct | round(1) }}% {% if pct >= 100 %}🏆{% endif %}</span>
+                        </div>
+                        {% if g.target_date %}
+                            <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.25rem;">📅 Target: {{ g.target_date }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-secondary);">No active savings goals.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

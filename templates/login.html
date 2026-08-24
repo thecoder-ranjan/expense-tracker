@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Login - Antigravity{% endblock %}
+
+{% block content %}
+<div class="auth-card card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="color:var(--color-primary); font-size:2.5rem; margin-bottom:0.5rem;">💸 Antigravity</h1>
+        <p style="color:var(--text-secondary);">Your Smart Personal Expense & Savings Assistant</p>
+    </div>
+
+    <div class="auth-tabs">
+        <div class="auth-tab active" data-target="login-form">🔐 Sign In</div>
+        <div class="auth-tab" data-target="signup-form">📝 Create Account</div>
+    </div>
+
+    <form id="login-form" class="tab-content active" action="{{ url_for('login') }}" method="POST">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Log In</button>
+    </form>
+
+    <form id="signup-form" class="tab-content" action="{{ url_for('signup') }}" method="POST">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" minlength="6" required>
+        </div>
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" name="password_confirm" class="form-control" minlength="6" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+    </form>
+</div>
+
+<script>
+    const tabs = document.querySelectorAll('.auth-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.getAttribute('data-target')).classList.add('active');
+        });
+    });
+</script>
+{% endblock %}
